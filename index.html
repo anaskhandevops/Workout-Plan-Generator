@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Plan Generator!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFFCEB; /* Requested background */
+        }
+
+        /* Main container styling */
+        .main-container {
+            background-color: #ffffff;
+            border: 3px solid #2D3748;
+            border-radius: 16px;
+            box-shadow: 8px 8px 0px #2D3748;
+            width: 100%;
+            max-width: 64rem; /* max-w-5xl */
+            margin: 2rem auto;
+            padding: 1.5rem sm:p-8; /* p-6 sm:p-8 */
+        }
+
+         /* Section Container Styling */
+        .section-container {
+             background-color: #FFF7ED; /* orange-50 */
+             border: 2px solid #FDBA74; /* orange-300 */
+             border-radius: 12px;
+             box-shadow: 4px 4px 0px #FDBA74; /* Offset shadow using border color */
+             padding: 1.5rem; /* p-6 */
+             margin-bottom: 1.5rem; /* mb-6 */
+        }
+         .results-container {
+             background-color: #FEF3C7; /* amber-100 */
+             border: 2px solid #FDE68A; /* amber-200 */
+             border-radius: 12px;
+             box-shadow: 4px 4px 0px #FDE68A;
+             padding: 1.5rem; /* p-6 */
+             margin-top: 1.5rem; /* mt-6 */
+             min-height: 200px;
+             transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Playful Checkbox Styling */
+        .styled-checkbox-group label {
+            display: inline-flex; align-items: center; cursor: pointer;
+            background-color: #ffffff; color: #DD6B20; font-weight: 500;
+            padding: 0.5rem 1rem; border-radius: 8px; border: 2px solid #FDBA74;
+            box-shadow: 2px 2px 0px #FDBA74; transition: all 0.15s ease-out;
+            font-size: 0.85rem; margin: 0.25rem; /* Spacing */
+        }
+        .styled-checkbox-group input[type="checkbox"] { display: none; /* Hide default */ }
+        .styled-checkbox-group input[type="checkbox"]:checked + label {
+             background-color: #FF7F50; /* Coral */ border-color: #E9754A;
+             color: white; box-shadow: 3px 3px 0px #E9754A;
+             transform: translateY(-1px);
+        }
+         .styled-checkbox-group label:hover {
+             background-color: #FEF3C7; /* amber-100 */
+             transform: translateY(-1px);
+             box-shadow: 3px 3px 0px #FDBA74;
+         }
+        .styled-checkbox-group input[type="checkbox"]:checked + label:hover {
+             background-color: #FF6347; /* Tomato */
+        }
+
+
+        /* Playful Select Styling */
+        select {
+            width: 100%;
+            padding: 0.65rem 1rem; /* Adjusted padding */
+            background-color: #ffffff;
+            border: 3px solid #4A5568;
+            border-radius: 10px;
+            color: #2D3748;
+            font-weight: 500;
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s ease-out;
+            box-shadow: 3px 3px 0px #4A5568;
+            font-size: 0.9rem;
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234A5568' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.25em 1.25em; padding-right: 2.75rem;
+        }
+        select:focus {
+            outline: none;
+            border-color: #FF7F50; /* Coral */
+            box-shadow: 3px 3px 0px #FF7F50, 0 0 0 3px #FFFCEB;
+            transform: translateY(-1px) translateX(-1px);
+        }
+
+        /* Playful Action Button Style */
+        .action-button, .download-button { /* Applied to both */
+            background-color: #FF7F50; /* Coral */
+            color: white;
+            font-weight: 700; /* bold */
+            padding: 0.85rem 2rem; /* Wider padding */
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 3px solid #2D3748; /* Darker border */
+            box-shadow: 5px 5px 0px #2D3748; /* Bigger shadow */
+            transition: all 0.15s ease-out;
+            cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.95rem; /* Slightly larger */
+        }
+        .action-button:hover, .download-button:hover {
+            background-color: #FF6347; /* Tomato */
+            box-shadow: 6px 6px 0px #2D3748;
+            transform: translateY(-2px) translateX(-1px); /* More lift */
+        }
+         .action-button:active, .download-button:active {
+            background-color: #CD5C5C; /* IndianRed */
+            box-shadow: 2px 2px 0px #2D3748;
+            transform: translateY(2px) translateX(2px); /* Push down effect */
+        }
+        .action-button:focus, .download-button:focus {
+            outline: none;
+            box-shadow: 5px 5px 0px #2D3748, 0 0 0 3px #FFFCEB, 0 0 0 5px #FF7F50; /* Ring effect */
+        }
+         /* Specific style for download button */
+         .download-button {
+              background-color: #34D399; /* Emerald-400 */
+              border-color: #059669; /* Emerald-600 */
+              box-shadow: 5px 5px 0px #059669;
+              font-size: 0.85rem; /* Slightly smaller */
+              padding: 0.7rem 1.5rem;
+         }
+          .download-button:hover { background-color: #10B981; box-shadow: 6px 6px 0px #047857; }
+          .download-button:active { background-color: #059669; box-shadow: 2px 2px 0px #047857; }
+          .download-button:focus { box-shadow: 5px 5px 0px #059669, 0 0 0 3px #FFFCEB, 0 0 0 5px #34D399; }
+
+
+        /* Result Styling */
+        #workoutPlan { list-style: none; padding: 0; }
+        #workoutPlan li {
+            background-color: #ffffff; padding: 0.75rem 1.25rem;
+            border-radius: 8px; margin-bottom: 0.75rem;
+            border: 1px solid #FDE68A; /* amber-200 */
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.04);
+            font-size: 0.95rem; color: #374151; /* gray-700 */
+        }
+        #workoutPlan li strong { color: #B45309; /* amber-700 */ font-weight: 600; }
+        #workoutPlan li span { color: #718096; font-size: 0.8rem; font-style: italic; margin-left: 0.5rem;}
+        .placeholder-text { color: #9A3412; font-style: italic; text-align: center; padding: 1rem; }
+
+        /* Headings & Labels */
+        .section-heading { color: #C2410C; font-weight: 700; text-align: center; border-bottom: 2px dashed #FDBA74; padding-bottom: 0.5rem; margin-bottom: 1rem; font-size: 1.125rem; }
+        label { color: #9A3412; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; display: block; }
+        .input-group-title { /* Title for checkbox groups */
+             color: #9A3412; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.75rem; display: block; text-align: center;
+        }
+
+    </style>
+</head>
+<body class="p-4 md:p-6">
+
+    <div class="main-container">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-slate-800 mb-8 tracking-tight flex items-center justify-center gap-3">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-9 h-9 text-orange-500">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M12.75 19.5v-.75a7.5 7.5 0 00-7.5-7.5H4.5m0-6.75h.75c7.87 0 14.25 6.38 14.25 14.25v.75M6 18.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /> </svg>
+            Workout Plan Generator!
+        </h1>
+
+        <div class="section-container">
+            <h2 class="section-heading">⚙️ Select Your Preferences</h2>
+            <form id="workoutForm">
+                <div class="mb-6">
+                    <span class="input-group-title">Target Muscle Groups:</span>
+                    <div id="muscleGroupCheckboxes" class="styled-checkbox-group flex flex-wrap justify-center gap-2">
+                        </div>
+                </div>
+
+                <div class="mb-6">
+                    <span class="input-group-title">Available Equipment:</span>
+                    <div id="equipmentCheckboxes" class="styled-checkbox-group flex flex-wrap justify-center gap-2">
+                        </div>
+                </div>
+
+                <div class="mb-6 max-w-xs mx-auto">
+                    <label for="durationSelect" class="text-center">Desired Duration:</label>
+                    <select id="durationSelect">
+                        <option value="15">~15 Minutes</option>
+                        <option value="30" selected>~30 Minutes</option>
+                        <option value="45">~45 Minutes</option>
+                        <option value="60">~60 Minutes</option>
+                    </select>
+                </div>
+
+                <div class="text-center pt-4">
+                    <button type="submit" id="generateBtn" class="action-button">
+                        💪 Generate Workout
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="resultsArea" class="results-container hidden">
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="section-heading !mb-0 !pb-0 !border-none flex-grow text-left">📋 Your Workout Plan Idea</h2>
+                 <button id="downloadPdfBtn" class="download-button">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                     Download PDF
+                 </button>
+            </div>
+            <ul id="workoutPlan">
+                <li class="placeholder-text">Click "Generate Workout" above!</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const workoutForm = document.getElementById('workoutForm');
+        const muscleGroupCheckboxesDiv = document.getElementById('muscleGroupCheckboxes');
+        const equipmentCheckboxesDiv = document.getElementById('equipmentCheckboxes');
+        const durationSelect = document.getElementById('durationSelect');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultsArea = document.getElementById('resultsArea');
+        const workoutPlanUl = document.getElementById('workoutPlan');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+        // --- Exercise Library (Expanded) ---
+        // Added more variety in muscle groups and equipment
+        const exercises = [
+            // Bodyweight
+            { name: "Push-ups", muscleGroups: ["Chest", "Triceps", "Shoulders", "Core"], equipment: ["Bodyweight"], estTime: 2 },
+            { name: "Squats", muscleGroups: ["Quads", "Glutes", "Hamstrings"], equipment: ["Bodyweight"], estTime: 2.5 },
+            { name: "Plank", muscleGroups: ["Abs", "Core", "Shoulders"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Lunges", muscleGroups: ["Quads", "Glutes", "Hamstrings"], equipment: ["Bodyweight"], estTime: 2.5 },
+            { name: "Burpees", muscleGroups: ["Full Body", "Cardio", "Legs", "Chest"], equipment: ["Bodyweight"], estTime: 3 },
+            { name: "Glute Bridges", muscleGroups: ["Glutes", "Hamstrings", "Lower Back"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Jumping Jacks", muscleGroups: ["Cardio", "Full Body"], equipment: ["Bodyweight"], estTime: 1 },
+            { name: "Crunches", muscleGroups: ["Abs"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Leg Raises", muscleGroups: ["Abs", "Hip Flexors"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Superman", muscleGroups: ["Back", "Lower Back", "Glutes", "Core"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Bird Dog", muscleGroups: ["Core", "Glutes", "Back", "Shoulders"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Calf Raises", muscleGroups: ["Calves"], equipment: ["Bodyweight"], estTime: 1 },
+            { name: "Wall Sit", muscleGroups: ["Quads", "Glutes"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Mountain Climbers", muscleGroups: ["Core", "Cardio", "Shoulders", "Legs"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Side Plank", muscleGroups: ["Obliques", "Core", "Shoulders"], equipment: ["Bodyweight"], estTime: 1.5 },
+            { name: "Diamond Push-ups", muscleGroups: ["Triceps", "Chest"], equipment: ["Bodyweight"], estTime: 2 },
+            { name: "Pike Push-ups", muscleGroups: ["Shoulders", "Triceps"], equipment: ["Bodyweight"], estTime: 2 },
+            { name: "Reverse Lunges", muscleGroups: ["Quads", "Glutes"], equipment: ["Bodyweight"], estTime: 2.5 },
+            { name: "Bicycle Crunches", muscleGroups: ["Abs", "Obliques"], equipment: ["Bodyweight"], estTime: 1.5 },
+
+            // Dumbbells
+            { name: "Dumbbell Bench Press", muscleGroups: ["Chest", "Triceps", "Shoulders"], equipment: ["Dumbbells", "Bench"], estTime: 3 },
+            { name: "Dumbbell Rows", muscleGroups: ["Back", "Lats", "Biceps", "Rear Delts"], equipment: ["Dumbbells"], estTime: 2.5 },
+            { name: "Goblet Squat", muscleGroups: ["Quads", "Glutes", "Core"], equipment: ["Dumbbell", "Kettlebell"], estTime: 3 },
+            { name: "Dumbbell Shoulder Press", muscleGroups: ["Shoulders", "Triceps"], equipment: ["Dumbbells"], estTime: 2.5 },
+            { name: "Bicep Curls", muscleGroups: ["Biceps"], equipment: ["Dumbbells", "Barbell", "Resistance Bands", "Cable Machine"], estTime: 2 },
+            { name: "Triceps Extensions (Overhead)", muscleGroups: ["Triceps"], equipment: ["Dumbbell", "Resistance Bands", "Cable Machine"], estTime: 2 },
+            { name: "Dumbbell Lunges", muscleGroups: ["Quads", "Glutes", "Hamstrings"], equipment: ["Dumbbells"], estTime: 3 },
+            { name: "Lateral Raises", muscleGroups: ["Shoulders", "Side Delts"], equipment: ["Dumbbells", "Resistance Bands", "Cable Machine"], estTime: 2 },
+            { name: "Romanian Deadlifts (RDLs)", muscleGroups: ["Hamstrings", "Glutes", "Lower Back"], equipment: ["Dumbbells", "Barbell", "Kettlebell"], estTime: 3 },
+            { name: "Dumbbell Flyes", muscleGroups: ["Chest"], equipment: ["Dumbbells", "Bench"], estTime: 2.5 },
+            { name: "Hammer Curls", muscleGroups: ["Biceps", "Forearms"], equipment: ["Dumbbells"], estTime: 2 },
+            { name: "Front Raises", muscleGroups: ["Shoulders", "Front Delts"], equipment: ["Dumbbells", "Resistance Bands", "Cable Machine"], estTime: 2 },
+            { name: "Bent-Over Rear Delt Flyes", muscleGroups: ["Shoulders", "Rear Delts", "Back"], equipment: ["Dumbbells", "Resistance Bands", "Cable Machine"], estTime: 2 },
+            { name: "Dumbbell Calf Raises", muscleGroups: ["Calves"], equipment: ["Dumbbells"], estTime: 1.5 },
+            { name: "Dumbbell Step-ups", muscleGroups: ["Legs", "Glutes", "Quads"], equipment: ["Dumbbells", "Bench", "Box"], estTime: 3 },
+            { name: "Renegade Rows", muscleGroups: ["Core", "Back", "Biceps", "Shoulders"], equipment: ["Dumbbells"], estTime: 2.5 },
+
+            // Barbell
+            { name: "Barbell Squats", muscleGroups: ["Quads", "Glutes", "Hamstrings", "Core"], equipment: ["Barbell", "Rack"], estTime: 4 },
+            { name: "Barbell Bench Press", muscleGroups: ["Chest", "Triceps", "Shoulders"], equipment: ["Barbell", "Bench", "Rack"], estTime: 4 },
+            { name: "Deadlifts", muscleGroups: ["Back", "Lower Back", "Legs", "Glutes", "Hamstrings", "Full Body", "Traps"], equipment: ["Barbell"], estTime: 5 },
+            { name: "Overhead Press (Barbell)", muscleGroups: ["Shoulders", "Triceps", "Core"], equipment: ["Barbell", "Rack"], estTime: 3.5 },
+            { name: "Barbell Rows", muscleGroups: ["Back", "Lats", "Biceps", "Rear Delts"], equipment: ["Barbell"], estTime: 3 },
+            { name: "Hip Thrusts (Barbell)", muscleGroups: ["Glutes", "Hamstrings"], equipment: ["Barbell", "Bench"], estTime: 3.5 },
+            { name: "Good Mornings", muscleGroups: ["Hamstrings", "Glutes", "Lower Back"], equipment: ["Barbell", "Rack"], estTime: 3 },
+            { name: "Barbell Calf Raises", muscleGroups: ["Calves"], equipment: ["Barbell", "Rack"], estTime: 2 },
+
+            // Resistance Bands
+            { name: "Resistance Band Rows", muscleGroups: ["Back", "Biceps"], equipment: ["Resistance Bands"], estTime: 2 },
+            { name: "Resistance Band Chest Press", muscleGroups: ["Chest", "Triceps"], equipment: ["Resistance Bands"], estTime: 2 },
+            { name: "Resistance Band Squats", muscleGroups: ["Legs", "Glutes"], equipment: ["Resistance Bands"], estTime: 2.5 },
+            { name: "Resistance Band Bicep Curls", muscleGroups: ["Biceps"], equipment: ["Resistance Bands"], estTime: 2 },
+            { name: "Resistance Band Triceps Pushdowns", muscleGroups: ["Triceps"], equipment: ["Resistance Bands"], estTime: 2 },
+            { name: "Resistance Band Pull-Aparts", muscleGroups: ["Shoulders", "Rear Delts", "Back"], equipment: ["Resistance Bands"], estTime: 1.5 },
+            { name: "Resistance Band Glute Kickbacks", muscleGroups: ["Glutes"], equipment: ["Resistance Bands"], estTime: 2 },
+            { name: "Resistance Band Lateral Walks", muscleGroups: ["Glutes", "Hips"], equipment: ["Resistance Bands"], estTime: 2 },
+
+            // Kettlebell
+            { name: "Kettlebell Swings", muscleGroups: ["Glutes", "Hamstrings", "Back", "Core", "Cardio"], equipment: ["Kettlebell"], estTime: 3 },
+            { name: "Kettlebell Goblet Squat", muscleGroups: ["Quads", "Glutes", "Core"], equipment: ["Kettlebell"], estTime: 3 },
+            { name: "Kettlebell Single Arm Press", muscleGroups: ["Shoulders", "Triceps", "Core"], equipment: ["Kettlebell"], estTime: 2.5 },
+            { name: "Turkish Get-Up", muscleGroups: ["Full Body", "Core", "Shoulders"], equipment: ["Kettlebell"], estTime: 4 },
+            { name: "Kettlebell Halo", muscleGroups: ["Shoulders", "Core"], equipment: ["Kettlebell"], estTime: 1.5 },
+
+            // Other Equipment
+            { name: "Pull-ups / Assisted Pull-ups", muscleGroups: ["Back", "Lats", "Biceps"], equipment: ["Pull-up Bar", "Assisted Pull-up Machine", "Resistance Bands"], estTime: 3 },
+            { name: "Dips / Assisted Dips", muscleGroups: ["Chest", "Triceps", "Shoulders"], equipment: ["Dip Station", "Assisted Dip Machine", "Bench"], estTime: 2.5 },
+            { name: "Lat Pulldowns", muscleGroups: ["Back", "Lats", "Biceps"], equipment: ["Cable Machine", "Lat Pulldown Machine"], estTime: 2.5 },
+            { name: "Cable Rows", muscleGroups: ["Back", "Biceps"], equipment: ["Cable Machine"], estTime: 2.5 },
+            { name: "Cable Chest Flyes", muscleGroups: ["Chest"], equipment: ["Cable Machine"], estTime: 2 },
+            { name: "Leg Press", muscleGroups: ["Quads", "Glutes", "Hamstrings"], equipment: ["Leg Press Machine"], estTime: 3 },
+            { name: "Leg Extensions", muscleGroups: ["Quads"], equipment: ["Leg Extension Machine"], estTime: 2 },
+            { name: "Hamstring Curls", muscleGroups: ["Hamstrings"], equipment: ["Hamstring Curl Machine"], estTime: 2 },
+            { name: "Medicine Ball Slams", muscleGroups: ["Core", "Full Body", "Cardio"], equipment: ["Medicine Ball"], estTime: 2 },
+            { name: "Stability Ball Crunches", muscleGroups: ["Abs", "Core"], equipment: ["Stability Ball"], estTime: 2 },
+            { name: "Box Jumps", muscleGroups: ["Legs", "Glutes", "Cardio"], equipment: ["Box"], estTime: 2.5 },
+            { name: "Farmer's Walk", muscleGroups: ["Forearms", "Traps", "Core", "Full Body"], equipment: ["Dumbbells", "Kettlebell", "Barbell"], estTime: 2 },
+            { name: "Face Pulls", muscleGroups: ["Shoulders", "Rear Delts", "Back", "Traps"], equipment: ["Cable Machine", "Resistance Bands"], estTime: 2 },
+            { name: "Smith Machine Squats", muscleGroups: ["Quads", "Glutes"], equipment: ["Smith Machine"], estTime: 3.5 }, // Example machine
+            { name: "Hyperextensions", muscleGroups: ["Lower Back", "Glutes", "Hamstrings"], equipment: ["Hyperextension Bench", "Stability Ball", "Bodyweight"], estTime: 2 },
+        ];
+
+        // --- Populate Checkboxes ---
+        function populateCheckboxes() {
+             // Extract unique muscle groups and equipment, then sort
+             const muscleGroups = [...new Set(exercises.flatMap(ex => ex.muscleGroups))].sort();
+             const equipment = [...new Set(exercises.flatMap(ex => ex.equipment))].sort();
+
+             muscleGroupCheckboxesDiv.innerHTML = ''; // Clear existing
+             equipmentCheckboxesDiv.innerHTML = ''; // Clear existing
+
+             // Populate muscle group checkboxes, excluding meta-groups for selection simplicity
+             muscleGroups.forEach(group => {
+                 if (group === "Full Body" || group === "Cardio" || group === "Core") return;
+                 const id = `muscle-${group.toLowerCase().replace(/[^a-z0-9]/g, '-')}`; // Sanitize ID
+                 muscleGroupCheckboxesDiv.innerHTML += `
+                     <div class="inline-block">
+                         <input type="checkbox" id="${id}" name="muscleGroup" value="${group}" class="hidden">
+                         <label for="${id}">${group}</label>
+                     </div>
+                 `;
+             });
+
+             // Populate equipment checkboxes, excluding Bodyweight (always available)
+             equipment.forEach(item => {
+                 if (item === "Bodyweight") return;
+                 const id = `equip-${item.toLowerCase().replace(/[^a-z0-9]/g, '-')}`; // Sanitize ID
+                 equipmentCheckboxesDiv.innerHTML += `
+                     <div class="inline-block">
+                         <input type="checkbox" id="${id}" name="equipment" value="${item}" class="hidden">
+                         <label for="${id}">${item}</label>
+                     </div>
+                 `;
+             });
+        }
+
+        // --- Helper: Shuffle Array (Fisher-Yates) ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+            return array;
+        }
+
+        // --- Generate Workout Logic ---
+        function generateWorkout() {
+            // 1. Get selected inputs from the form
+            const selectedMuscleGroups = Array.from(document.querySelectorAll('input[name="muscleGroup"]:checked')).map(cb => cb.value);
+            const selectedEquipment = Array.from(document.querySelectorAll('input[name="equipment"]:checked')).map(cb => cb.value);
+            const duration = parseInt(durationSelect.value, 10);
+
+            // Ensure Bodyweight is always considered available
+            const availableEquipment = ["Bodyweight", ...selectedEquipment];
+
+            // 2. Filter exercises based on selections
+            let possibleExercises = exercises.filter(ex => {
+                // If specific muscle groups are selected, exercise must target at least one. If none selected, allow all.
+                const targetsMuscle = selectedMuscleGroups.length === 0 || selectedMuscleGroups.some(group => ex.muscleGroups.includes(group));
+                if (!targetsMuscle && selectedMuscleGroups.length > 0) return false;
+
+                // Must have all required equipment available
+                const hasEquipment = ex.equipment.every(req => availableEquipment.includes(req));
+                return hasEquipment;
+            });
+
+            // 3. Handle no matching exercises
+            if (possibleExercises.length === 0) {
+                workoutPlanUl.innerHTML = '<li class="placeholder-text !text-red-600">No exercises found matching your criteria. Try selecting different muscle groups or equipment.</li>';
+                resultsArea.classList.remove('hidden');
+                resultsArea.style.opacity = '1';
+                downloadPdfBtn.style.display = 'none'; // Hide download button if no results
+                return;
+            }
+
+            // 4. Select exercises to fit the duration
+            const shuffledExercises = shuffleArray([...possibleExercises]);
+            const workoutPlan = [];
+            let currentDuration = 0;
+            // Allocate slightly less time for exercises to account for warm-up/cool-down/transitions
+            const targetDuration = duration * 0.7; // Aim for ~70% of total time for work sets
+
+            // Define exercise count limits based on duration
+            let maxExercises;
+            if (duration <= 20) maxExercises = 3;
+            else if (duration <= 40) maxExercises = 4;
+            else if (duration <= 50) maxExercises = 5;
+            else maxExercises = 6;
+
+
+            for (const exercise of shuffledExercises) {
+                // Add exercise if it fits within the remaining time AND exercise limit
+                if (currentDuration + exercise.estTime <= targetDuration && workoutPlan.length < maxExercises) {
+                    workoutPlan.push(exercise);
+                    currentDuration += exercise.estTime;
+                }
+                 // Break early if we hit the exercise limit
+                if (workoutPlan.length >= maxExercises) break;
+            }
+
+             // Ensure at least one exercise is added if possible, even if slightly over time/limit
+             if (workoutPlan.length === 0 && shuffledExercises.length > 0) {
+                 workoutPlan.push(shuffledExercises[0]);
+             }
+
+            // 5. Display the generated plan
+            displayWorkoutPlan(workoutPlan);
+        }
+
+        // --- Display Workout Plan Function ---
+        function displayWorkoutPlan(plan) {
+             workoutPlanUl.innerHTML = ''; // Clear previous plan
+
+             if (plan.length === 0) { // Should be handled by generateWorkout, but as a fallback
+                 workoutPlanUl.innerHTML = '<li class="placeholder-text !text-red-600">Could not generate a plan with the selected criteria.</li>';
+                 downloadPdfBtn.style.display = 'none';
+                 return;
+             }
+
+            // Add Warm-up suggestion
+            const warmupLi = document.createElement('li');
+            warmupLi.innerHTML = `<strong>Warm-up:</strong> 5-10 Minutes <span>(e.g., Light cardio, dynamic stretches relevant to workout)</span>`;
+            workoutPlanUl.appendChild(warmupLi);
+
+            // Add selected exercises
+            plan.forEach((ex, index) => {
+                 const li = document.createElement('li');
+                 // Basic sets/reps suggestion (can be customized further)
+                 const sets = 3;
+                 const reps = ex.muscleGroups.includes("Cardio") ? "30-60 sec" : "8-12 reps";
+                 li.innerHTML = `<strong>${index + 1}. ${ex.name}:</strong> ${sets} sets of ${reps} <span>(Muscles: ${ex.muscleGroups.join(', ')})</span>`;
+                 workoutPlanUl.appendChild(li);
+            });
+
+             // Add Cool-down suggestion
+             const cooldownLi = document.createElement('li');
+             cooldownLi.innerHTML = `<strong>Cool-down:</strong> 5-10 Minutes <span>(e.g., Static stretches for worked muscles)</span>`;
+             workoutPlanUl.appendChild(cooldownLi);
+
+            // Show results area and download button
+            resultsArea.classList.remove('hidden');
+            downloadPdfBtn.style.display = 'inline-flex'; // Show download button
+            resultsArea.style.opacity = '0';
+            setTimeout(() => { resultsArea.style.opacity = '1'; }, 50); // Fade in
+        }
+
+        // --- Download PDF Function ---
+        function downloadPDF() {
+            // Ensure jsPDF is loaded
+            if (typeof jspdf === 'undefined') {
+                alert('PDF library not loaded. Please try again.');
+                return;
+            }
+            const { jsPDF } = jspdf; // Destructure
+            const doc = new jsPDF();
+
+            const planItems = workoutPlanUl.querySelectorAll('li');
+            if (planItems.length <= 1 || workoutPlanUl.querySelector('.placeholder-text')) { // Check if only placeholder/error is present
+                alert('No workout plan generated to download.');
+                return;
+            }
+
+            let yPos = 20; // Initial Y position
+            const lineHeight = 7; // Line height in mm
+            const pageMargin = 15;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const usableWidth = pageWidth - (pageMargin * 2);
+
+            // Title
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text("Your Workout Plan Idea", pageWidth / 2, yPos, { align: 'center' });
+            yPos += lineHeight * 2;
+
+            // Add generated plan items
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+
+            planItems.forEach(item => {
+                // Extract text content, attempting basic formatting
+                let strongText = item.querySelector('strong')?.textContent || '';
+                let normalText = "";
+                let spanText = item.querySelector('span')?.textContent || '';
+
+                item.childNodes.forEach(node => {
+                     if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                         normalText += node.textContent.trim() + " ";
+                     }
+                 });
+                 normalText = normalText.replace(strongText, '').replace(spanText, '').trim(); // Remove strong/span text
+
+                // Use splitTextToSize for wrapping
+                const fullLineText = `${strongText} ${normalText} ${spanText}`; // Reconstruct for wrapping
+                const lines = doc.splitTextToSize(fullLineText, usableWidth);
+
+                // Check for page break before adding lines
+                if (yPos + (lines.length * lineHeight) > doc.internal.pageSize.getHeight() - pageMargin) {
+                    doc.addPage();
+                    yPos = pageMargin;
+                }
+
+                // Add text line by line (jsPDF doesn't handle rich text easily)
+                 doc.text(lines, pageMargin, yPos);
+                yPos += lines.length * lineHeight + (lineHeight / 2); // Add extra space between items
+            });
+
+            // Add disclaimer
+            yPos += lineHeight; // Extra space before disclaimer
+             if (yPos + (4 * lineHeight) > doc.internal.pageSize.getHeight() - pageMargin) { // Check space for disclaimer
+                    doc.addPage();
+                    yPos = pageMargin;
+                }
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'italic');
+            doc.setTextColor(150); // Gray color
+            const disclaimer = "Disclaimer: This is a computer-generated suggestion. Consult a fitness professional before starting any new workout routine. Adjust sets/reps/weight based on your fitness level.";
+            const disclaimerLines = doc.splitTextToSize(disclaimer, usableWidth);
+            doc.text(disclaimerLines, pageMargin, yPos);
+
+            // Save the PDF
+            doc.save('workout-plan-idea.pdf');
+        }
+
+
+        // --- Event Listeners ---
+        workoutForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Prevent page reload
+            generateWorkout();
+        });
+
+        downloadPdfBtn.addEventListener('click', downloadPDF); // Listener for download button
+
+        // --- Initial Load ---
+        populateCheckboxes(); // Create checkboxes dynamically
+        downloadPdfBtn.style.display = 'none'; // Hide download button initially
+
+    </script>
+
+</body>
+</html>
